@@ -192,36 +192,22 @@ const copy = async (tabId, content) => {
   });
 };
 
-// actions
+/*
+ * Actions
+ */
+
 chrome.action.onClicked.addListener(tab => {
-  // VLC can play YouTube. Allow user to send the YouTube link to VLC
-  if (tab.url && tab.url.startsWith('https://www.youtube.com/watch?v=')) {
-    open(tab.url, new Native(tab.id));
+  // Always display the dialog except for internal page
+  if (tab.url) {
+    chrome.scripting.executeScript({
+      target: {
+        tabId: tab.id
+      },
+      files: ['/data/inject/inject.js']
+    });
   }
   else {
-    chrome.storage.session.get({
-      [tab.id]: {}
-    }, prefs => {
-      const links = Object.keys(prefs[tab.id]);
-      if (links.length === 1) {
-        const native = new Native(tab.id);
-        open(links[0], native);
-      }
-      else if (links.length > 1) {
-        chrome.scripting.executeScript({
-          target: {
-            tabId: tab.id
-          },
-          files: ['/data/inject/inject.js']
-        });
-      }
-      else if (tab.url) {
-        open(tab.url, new Native(tab.id));
-      }
-      else {
-        notify('Cannot send an internal page to VLC', tab.id);
-      }
-    });
+    notify('Cannot send an internal page to VLC', tab.id);
   }
 });
 
