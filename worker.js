@@ -1,7 +1,6 @@
 /* global Native */
 
 // self.importScripts('native.js');
-// self.importScripts('context.js');
 
 const notify = (e, tabId) => {
   chrome.action.setTitle({
