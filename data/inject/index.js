@@ -1,6 +1,24 @@
 'use strict';
 
 const select = document.querySelector('select');
+const ToVLCButton = document.getElementById("send-to-vlc");
+const ToMXButton = document.getElementById("send-to-mx");
+
+function onSelectedChanged() {
+  const selected = [...select.options].find(e => e.selected);
+  if (selected) {
+    ToVLCButton.href = "vlc://" + selected.value
+    ToMXButton.href = "intent:" + selected.value + "#Intent;package=com.mxtech.videoplayer.ad;S.title=Send to Player;end"
+  }
+
+  if (selected && selected.innerText.startsWith("Page")) {
+      ToMXButton.hidden = true
+  } else {
+      ToMXButton.hidden = false
+  }
+}
+
+select.addEventListener("change", onSelectedChanged);
 
 chrome.runtime.sendMessage({
   cmd: 'get-links'
@@ -39,6 +57,8 @@ chrome.runtime.sendMessage({
     select.appendChild(option);
   });
   select.value = response[active][0];
+
+  onSelectedChanged()
 });
 window.addEventListener('load', () => window.setTimeout(() => {
   select.focus();

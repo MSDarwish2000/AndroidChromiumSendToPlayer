@@ -17,46 +17,6 @@ const notify = (e, tabId) => {
   });
 };
 
-const sendToVLC = (url, tab) => {
-  // decode
-  if (url.startsWith('https://www.google.') && url.indexOf('&url=') !== -1) {
-    url = decodeURIComponent(url.split('&url=')[1].split('&')[0]);
-  }
-
-  simulateClick("vlc://" + url, tab);
-};
-
-const sendToMX = (url, tab) => {
-  // decode
-  if (url.startsWith('https://www.google.') && url.indexOf('&url=') !== -1) {
-    url = decodeURIComponent(url.split('&url=')[1].split('&')[0]);
-  }
-
-  simulateClick("intent:" + url + "#Intent;package=com.mxtech.videoplayer.ad;S.title=" + tab.title + ";end", tab);
-};
-
-const simulateClick = (url, tab) => {
-  chrome.scripting.executeScript(
-      {
-        target: {tabId: tab.id},
-        func: (url) => {
-
-          var clicker = document.getElementById("send-to-player-clicker")
-          if (!clicker) {
-            clicker = document.createElement("a")
-            clicker.id = "send-to-player-clicker";
-            clicker.setAttribute("type", "hidden");
-            document.body.appendChild(clicker);
-          }
-
-          clicker.href = url
-          clicker.click()
-          clicker.remove()
-        },
-        args: [url],
-      });
-};
-
 // clean up
 chrome.tabs.onRemoved.addListener(tabId => {
   chrome.storage.session.remove(tabId + '');
@@ -157,7 +117,7 @@ chrome.action.onClicked.addListener(tab => {
     });
   }
   else {
-    notify('Cannot send an internal page to VLC', tab.id);
+    notify('Cannot send an internal page', tab.id);
   }
 });
 
@@ -186,12 +146,6 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
         catch (e) {}
       }
     });
-  }
-  else if (request.cmd === 'send-to-vlc') {
-    sendToVLC(request.url, sender.tab);
-  }
-  else if (request.cmd === 'send-to-mx') {
-    sendToMX(request.url, sender.tab);
   }
 });
 
