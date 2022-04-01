@@ -54,9 +54,6 @@ document.addEventListener('keydown', e => {
   if (e.code === 'Escape') {
     document.querySelector('[data-cmd="close-me"]').click();
   }
-  if (e.code === 'Enter') {
-    document.querySelector('[data-cmd="open-in"]').click();
-  }
 });
 
 document.addEventListener('click', e => {
@@ -66,30 +63,12 @@ document.addEventListener('click', e => {
       cmd: 'close-me'
     });
   }
-  else if (cmd === 'select-all') {
-    if (select.options.length > 1) {
-      for (const o of [...select.options].slice(1)) {
-        o.selected = true;
-      }
-    }
-    else if (select.options.length) {
-      select.option[0].selected = true;
-    }
-  }
   else if (cmd === 'open-in') {
-    const urls = [...select.options].filter(e => e.selected).map(e => e.value);
-    if (urls.length === 1) {
+    const selected = [...select.options].find(e => e.selected);
+    if (selected) {
       chrome.runtime.sendMessage({
         cmd: 'open-in',
-        url: urls[0]
-      }, () => chrome.runtime.sendMessage({
-        cmd: 'close-me'
-      }));
-    }
-    else if (urls.length > 1) {
-      chrome.runtime.sendMessage({
-        cmd: 'combine',
-        urls
+        url: selected.value
       }, () => chrome.runtime.sendMessage({
         cmd: 'close-me'
       }));
@@ -99,11 +78,16 @@ document.addEventListener('click', e => {
     }
   }
   else if (cmd === 'copy') {
-    const urls = [...select.options].filter(e => e.selected).map(e => e.value);
-    chrome.runtime.sendMessage({
-      cmd: 'copy',
-      content: urls.join('\n')
-    });
+    const selected = [...select.options].find(e => e.selected)
+    if (selected) {
+      chrome.runtime.sendMessage({
+        cmd: 'copy',
+        content: selected.value
+      });
+    }
+    else {
+      alert('Please select a media link from the list');
+    }
   }
 });
 select.addEventListener('dblclick', e => {

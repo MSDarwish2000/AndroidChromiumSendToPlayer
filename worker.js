@@ -17,40 +17,6 @@ const notify = (e, tabId) => {
   });
 };
 
-// handle multiple links
-const toM3U8 = (urls, callback, title) => chrome.storage.local.get({
-  'use-page-title': true
-}, prefs => chrome.runtime.sendNativeMessage('com.add0n.node', {
-  permissions: ['crypto', 'fs', 'os', 'path', 'child_process'],
-  args: [`#EXTM3U
-` + urls.map(url => {
-    if (title && prefs['use-page-title']) {
-      return `#EXTINF:-1,${title}` + '\n' + url;
-    }
-    return url;
-  }).join('\n')],
-  script: `
-    const path = require('path');
-
-    const filename = path.join(
-      require('os').tmpdir(),
-      'media-' + require('crypto').randomBytes(4).readUInt32LE(0) + '.m3u8'
-    );
-    require('fs').writeFile(filename, args[0], err => {
-      if (err) {
-        push({
-          err: err.message || err
-        });
-        done();
-      }
-      push({
-        filename
-      });
-      done();
-    });
-  `
-}, callback));
-
 const open = (url, native) => {
   // decode
   if (url.startsWith('https://www.google.') && url.indexOf('&url=') !== -1) {
@@ -240,33 +206,6 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
   else if (request.cmd === 'open-in') {
     const native = new Native(sender.tab.id);
     open(request.url, native);
-  }
-  else if (request.cmd === 'combine') {
-    chrome.storage.local.get({
-      'm3u8': true
-    }, prefs => {
-      const native = new Native(sender.tab.id);
-      if (prefs.m3u8) {
-        toM3U8(request.urls, resp => {
-          if (resp && resp.err) {
-            notify(resp.err, sender.tab.id);
-          }
-          else if (resp && resp.filename) {
-            open(resp.filename, native);
-          }
-          else {
-            chrome.tabs.create({
-              url: '/data/helper/index.html'
-            });
-          }
-        }, sender.tab.title);
-      }
-      else {
-        for (const url of request.urls) {
-          open(url, native);
-        }
-      }
-    });
   }
 });
 
