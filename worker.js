@@ -17,60 +17,35 @@ const notify = (e, tabId) => {
   });
 };
 
-const open = (url, native) => {
+const open = (url, tab) => {
   // decode
   if (url.startsWith('https://www.google.') && url.indexOf('&url=') !== -1) {
     url = decodeURIComponent(url.split('&url=')[1].split('&')[0]);
   }
 
-  if (navigator.userAgent.indexOf('Mac') !== -1) {
-    native.exec('open', ['-a', 'VLC', url]);
-  }
-  else {
-    chrome.storage.local.get({
-      path: null
-    }, prefs => {
-      if (navigator.userAgent.indexOf('Linux') !== -1) {
-        native.exec(prefs.path || 'vlc', [url]);
-      }
-      else if (prefs.path) {
-        native.exec(prefs.path, [url]);
-      }
-      else { // Windows
-        native.env(res => {
-          const paths = [
-            res.env['ProgramFiles(x86)'] + '\\VideoLAN\\VLC\\vlc.exe',
-            res.env['ProgramFiles'] + '\\VideoLAN\\VLC\\vlc.exe'
-          ];
-          chrome.runtime.sendNativeMessage('com.add0n.node', {
-            permissions: ['fs'],
-            args: [...paths],
-            script: `
-              const fs = require('fs');
-              const exist = path => new Promise(resolve => fs.access(path, fs.F_OK, e => {
-                resolve(e ? false : true);
-              }));
-              Promise.all(args.map(exist)).then(d => {
-                push({d});
-                done();
-              }).catch(e => push({e: e.message}));
-            `
-          }, r => {
-            if (!r) {
-              console.warn('Native Client Exited', chrome.runtime.lastError);
-            }
-            else if (r && r.e) {
-              console.warn('Unexpected Error', r.e);
-            }
-            const path = r && r.d[1] ? paths[1] : (res.env['ProgramFiles(x86)'] ? paths[0] : paths[1]);
-            chrome.storage.local.set({
-              path
-            }, () => native.exec(path, [url]));
-          });
-        });
-      }
-    });
-  }
+  simulateClick("vlc://" + url, tab);
+};
+
+const simulateClick = (url, tab) => {
+  chrome.scripting.executeScript(
+      {
+        target: {tabId: tab.id},
+        func: (url) => {
+
+          var clicker = document.getElementById("send-to-player-clicker")
+          if (!clicker) {
+            clicker = document.createElement("a")
+            clicker.id = "send-to-player-clicker";
+            clicker.setAttribute("type", "hidden");
+            document.body.appendChild(clicker);
+          }
+
+          clicker.href = url
+          clicker.click()
+          clicker.remove()
+        },
+        args: [url],
+      });
 };
 
 // clean up
@@ -204,8 +179,7 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
     });
   }
   else if (request.cmd === 'open-in') {
-    const native = new Native(sender.tab.id);
-    open(request.url, native);
+    open(request.url, sender.tab);
   }
 });
 
