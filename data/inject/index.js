@@ -63,11 +63,25 @@ document.addEventListener('click', e => {
       cmd: 'close-me'
     });
   }
-  else if (cmd === 'open-in') {
+  else if (cmd === 'send-to-vlc') {
     const selected = [...select.options].find(e => e.selected);
     if (selected) {
       chrome.runtime.sendMessage({
-        cmd: 'open-in',
+        cmd: 'send-to-vlc',
+        url: selected.value
+      }, () => chrome.runtime.sendMessage({
+        cmd: 'close-me'
+      }));
+    }
+    else {
+      alert('Please select a media link from the list');
+    }
+  }
+  else if (cmd === 'send-to-mx') {
+    const selected = [...select.options].find(e => e.selected);
+    if (selected) {
+      chrome.runtime.sendMessage({
+        cmd: 'send-to-mx',
         url: selected.value
       }, () => chrome.runtime.sendMessage({
         cmd: 'close-me'
@@ -88,10 +102,5 @@ document.addEventListener('click', e => {
     else {
       alert('Please select a media link from the list');
     }
-  }
-});
-select.addEventListener('dblclick', e => {
-  if (e.target.tagName === 'OPTION') {
-    document.querySelector('[data-cmd="open-in"]').click();
   }
 });

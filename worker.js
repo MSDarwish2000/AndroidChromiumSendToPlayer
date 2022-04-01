@@ -17,13 +17,22 @@ const notify = (e, tabId) => {
   });
 };
 
-const open = (url, tab) => {
+const sendToVLC = (url, tab) => {
   // decode
   if (url.startsWith('https://www.google.') && url.indexOf('&url=') !== -1) {
     url = decodeURIComponent(url.split('&url=')[1].split('&')[0]);
   }
 
   simulateClick("vlc://" + url, tab);
+};
+
+const sendToMX = (url, tab) => {
+  // decode
+  if (url.startsWith('https://www.google.') && url.indexOf('&url=') !== -1) {
+    url = decodeURIComponent(url.split('&url=')[1].split('&')[0]);
+  }
+
+  simulateClick("intent:" + url + "#Intent;package=com.mxtech.videoplayer.ad;S.title=" + tab.title + ";end", tab);
 };
 
 const simulateClick = (url, tab) => {
@@ -178,8 +187,11 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
       }
     });
   }
-  else if (request.cmd === 'open-in') {
-    open(request.url, sender.tab);
+  else if (request.cmd === 'send-to-vlc') {
+    sendToVLC(request.url, sender.tab);
+  }
+  else if (request.cmd === 'send-to-mx') {
+    sendToMX(request.url, sender.tab);
   }
 });
 
