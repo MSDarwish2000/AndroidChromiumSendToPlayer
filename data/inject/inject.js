@@ -1,9 +1,9 @@
 'use strict';
 
-[...document.querySelectorAll('.open-in-vlc')].forEach(f => f.remove());
+[...document.querySelectorAll('.send-to-player')].forEach(f => f.remove());
 
 window.iframe = document.createElement('iframe');
-window.iframe.classList.add('open-in-vlc');
+window.iframe.classList.add('send-to-player');
 window.iframe.setAttribute('style', `
   border: none;
   position: fixed;
